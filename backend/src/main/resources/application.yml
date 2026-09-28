@@ -2,13 +2,21 @@ spring:
   application:
     name: isapet-backend
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/isapet}
-    username: ${DB_USERNAME:isapet}
-    password: ${DB_PASSWORD:isapet}
+    url: jdbc:h2:mem:isapet;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
   jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
     open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  flyway:
+    enabled: false
 
 server:
   port: ${SERVER_PORT:8080}
