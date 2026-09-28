@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: isapet-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/isapet}
+    username: ${DB_USERNAME:isapet}
+    password: ${DB_PASSWORD:isapet}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

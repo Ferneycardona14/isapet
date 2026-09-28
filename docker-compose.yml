@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: isapet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: isapet
+      POSTGRES_USER: isapet
+      POSTGRES_PASSWORD: isapet
+    ports:
+      - "5433:5432"
+    volumes:
+      - isapet-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  isapet-postgres-data:

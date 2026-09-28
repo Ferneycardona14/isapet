@@ -1,0 +1,210 @@
+<div class="page-shell">
+  <header class="topbar">
+    <a class="brand" href="/afiliados/registro" aria-label="ISAPET, inicio">
+      <span class="brand-mark" aria-hidden="true">I</span>
+      <span class="brand-name">ISAPET</span>
+    </a>
+    <a class="topbar-label" href="/afiliados">Gestión de afiliados</a>
+  </header>
+
+  <main class="content">
+    <div class="page-heading">
+      <p class="eyebrow"><span></span> F-01 <span class="eyebrow-divider">/</span> NUEVO REGISTRO</p>
+      <h1>{{ afiliado ? 'Registro del afiliado' : 'Registrar afiliado' }}</h1>
+      <p class="intro">{{ afiliado ? 'El afiliado está registrado. Puedes agregar ninguna, una o varias mascotas.' : 'Ingresa los datos de contacto del afiliado para comenzar.' }}</p>
+    </div>
+
+    @if (!afiliado) {
+      @if (errorAfiliado) {
+        <section class="notice error-notice" role="alert" aria-live="assertive">
+          <div class="notice-icon" aria-hidden="true">!</div>
+          <div class="notice-copy">
+            <h2>No se pudo registrar el afiliado</h2>
+            <p>{{ errorAfiliado }}</p>
+            @if (detalleErroresAfiliado.length > 0) {
+              <ul>@for (detail of detalleErroresAfiliado; track detail) { <li>{{ detail }}</li> }</ul>
+            }
+          </div>
+        </section>
+      }
+
+      <form [formGroup]="afiliadoForm" (ngSubmit)="registrarAfiliado()" novalidate>
+        <section class="form-section" aria-labelledby="affiliate-heading">
+          <div class="section-heading">
+            <span class="section-index">01</span>
+            <div>
+              <h2 id="affiliate-heading">Datos del afiliado</h2>
+              <p>Información personal y de contacto</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <label class="field field-wide" for="numeroIdentificacion">
+              <span>Número de identificación</span>
+              <input id="numeroIdentificacion" formControlName="numeroIdentificacion" autocomplete="off" maxlength="30" inputmode="numeric" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.numeroIdentificacion, 30, 'El documento solo puede contener números.')" />
+              @if (mensajeCampo(afiliadoForm.controls.numeroIdentificacion, 30, 'El documento solo puede contener números.'); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+            <label class="field" for="nombres">
+              <span>Nombres</span>
+              <input id="nombres" formControlName="nombres" autocomplete="given-name" maxlength="100" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.nombres, 100, 'El nombre solo puede contener letras, espacios y el número 6.')" />
+              @if (mensajeCampo(afiliadoForm.controls.nombres, 100, 'El nombre solo puede contener letras, espacios y el número 6.'); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+            <label class="field" for="apellidos">
+              <span>Apellidos</span>
+              <input id="apellidos" formControlName="apellidos" autocomplete="family-name" maxlength="100" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.apellidos, 100, 'El apellido solo puede contener letras, espacios y el número 6.')" />
+              @if (mensajeCampo(afiliadoForm.controls.apellidos, 100, 'El apellido solo puede contener letras, espacios y el número 6.'); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+            <label class="field" for="celular">
+              <span>Celular</span>
+              <input id="celular" type="tel" formControlName="celular" autocomplete="tel" maxlength="20" inputmode="numeric" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.celular, 20, 'El celular solo puede contener números.')" />
+              @if (mensajeCampo(afiliadoForm.controls.celular, 20, 'El celular solo puede contener números.'); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+            <label class="field" for="correo">
+              <span>Correo electrónico</span>
+              <input id="correo" type="email" formControlName="correo" autocomplete="email" maxlength="254" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.correo, 254)" />
+              @if (mensajeCampo(afiliadoForm.controls.correo, 254); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+            <label class="field field-wide" for="direccion">
+              <span>Dirección</span>
+              <input id="direccion" formControlName="direccion" autocomplete="street-address" maxlength="200" [attr.aria-invalid]="!!mensajeCampo(afiliadoForm.controls.direccion, 200)" />
+              @if (mensajeCampo(afiliadoForm.controls.direccion, 200); as message) { <small class="field-error">{{ message }}</small> }
+            </label>
+          </div>
+        </section>
+
+        <footer class="form-footer">
+          <p>Todos los campos son obligatorios.</p>
+          <button class="submit-button" type="submit" [disabled]="afiliadoEnviando">
+            @if (afiliadoEnviando) { <span class="spinner" aria-hidden="true"></span> Registrando... }
+            @else { Registrar afiliado <span aria-hidden="true">&#8594;</span> }
+          </button>
+        </footer>
+      </form>
+    } @else {
+      <section class="affiliate-summary notice success-notice" role="status" aria-live="polite">
+        <div class="notice-icon" aria-hidden="true">&#10003;</div>
+        <div class="notice-copy">
+          <h2>Afiliado registrado</h2>
+          <p>{{ afiliado.nombres }} {{ afiliado.apellidos }}</p>
+          <dl class="result-details">
+            <div><dt>Identificación</dt><dd>{{ afiliado.numeroIdentificacion }}</dd></div>
+            <div><dt>Celular</dt><dd>{{ afiliado.celular }}</dd></div>
+            <div><dt>Correo</dt><dd>{{ afiliado.correo }}</dd></div>
+            <div><dt>Dirección</dt><dd>{{ afiliado.direccion }}</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="pet-management" aria-labelledby="pets-heading">
+        <div class="section-heading pet-management-heading">
+          <span class="section-index pet-index">02</span>
+          <div>
+            <h2 id="pets-heading">Mascotas del afiliado</h2>
+            <p>Agrega mascotas asociadas a {{ afiliado.nombres }} {{ afiliado.apellidos }}.</p>
+          </div>
+        </div>
+
+        @if (errorMascota) {
+          <section class="notice error-notice" role="alert" aria-live="assertive">
+            <div class="notice-icon" aria-hidden="true">!</div>
+            <div class="notice-copy">
+              <h2>No se pudo registrar la mascota</h2>
+              <p>{{ errorMascota }}</p>
+              @if (detalleErroresMascota.length > 0) {
+                <ul>@for (detail of detalleErroresMascota; track detail) { <li>{{ detail }}</li> }</ul>
+              }
+            </div>
+          </section>
+        }
+
+        @if (mascotas.length === 0) {
+          <p class="empty-pets">Este afiliado aún no tiene mascotas. Puedes agregar una o finalizar el registro sin mascotas.</p>
+        } @else {
+          <div class="pet-table-wrap">
+            <table class="pet-table">
+              <thead><tr><th>Nombre</th><th>Especie</th><th>Raza</th><th>Edad</th><th>Color</th></tr></thead>
+              <tbody>
+                @for (mascota of mascotas; track mascota.id) {
+                  <tr>
+                    <td data-label="Nombre">{{ mascota.nombre }}</td>
+                    <td data-label="Especie">{{ mascota.especie }}</td>
+                    <td data-label="Raza">{{ mascota.raza }}</td>
+                    <td data-label="Edad">{{ mascota.edad }}</td>
+                    <td data-label="Color">{{ mascota.color }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (finalizado) {
+          <section class="notice success-notice finish-notice" role="status">
+            <div class="notice-icon" aria-hidden="true">&#10003;</div>
+            <div class="notice-copy">
+              <h2>Registro finalizado</h2>
+              <p>{{ mascotas.length === 0 ? 'El afiliado quedó registrado sin mascotas.' : 'El afiliado y sus mascotas quedaron registrados.' }}</p>
+            </div>
+            <button class="text-button" type="button" (click)="nuevoRegistro()">Nuevo afiliado</button>
+          </section>
+        } @else {
+          @if (mostrarFormularioMascota) {
+            <form class="pet-form" [formGroup]="mascotaForm" (ngSubmit)="registrarMascota()" novalidate>
+              <div class="section-heading pet-form-heading">
+                <span class="section-index pet-index">+</span>
+                <div><h2>{{ mascotas.length === 0 ? 'Agregar mascota' : 'Agregar otra mascota' }}</h2></div>
+              </div>
+              <div class="fields">
+                <label class="field" for="nombreMascota">
+                  <span>Nombre</span>
+                  <input id="nombreMascota" formControlName="nombre" maxlength="100" [attr.aria-invalid]="!!mensajeCampo(mascotaForm.controls.nombre, 100)" />
+                  @if (mensajeCampo(mascotaForm.controls.nombre, 100); as message) { <small class="field-error">{{ message }}</small> }
+                </label>
+                <label class="field" for="especie">
+                  <span>Especie</span>
+                  <select id="especie" class="species-select" formControlName="especie" [attr.aria-invalid]="!!mensajeCampo(mascotaForm.controls.especie)">
+                    <option value="">Selecciona una especie</option>
+                    @for (especie of especies; track especie) { <option [value]="especie">{{ especie }}</option> }
+                  </select>
+                  @if (mensajeCampo(mascotaForm.controls.especie); as message) { <small class="field-error">{{ message }}</small> }
+                </label>
+                <label class="field" for="raza">
+                  <span>Raza</span>
+                  <input id="raza" formControlName="raza" maxlength="100" [attr.aria-invalid]="!!mensajeCampo(mascotaForm.controls.raza, 100)" />
+                  @if (mensajeCampo(mascotaForm.controls.raza, 100); as message) { <small class="field-error">{{ message }}</small> }
+                </label>
+                <label class="field" for="edad">
+                  <span>Edad (años)</span>
+                  <input id="edad" type="number" inputmode="numeric" step="1" min="0" max="100" formControlName="edad" [attr.aria-invalid]="!!mensajeCampo(mascotaForm.controls.edad)" />
+                  @if (mensajeCampo(mascotaForm.controls.edad); as message) { <small class="field-error">{{ message }}</small> }
+                </label>
+                <label class="field" for="color">
+                  <span>Color</span>
+                  <input id="color" formControlName="color" maxlength="50" [attr.aria-invalid]="!!mensajeCampo(mascotaForm.controls.color, 50)" />
+                  @if (mensajeCampo(mascotaForm.controls.color, 50); as message) { <small class="field-error">{{ message }}</small> }
+                </label>
+              </div>
+              <footer class="form-footer pet-form-footer">
+                <p>Todos los campos son obligatorios.</p>
+                <div class="pet-form-actions">
+                  <button class="text-button" type="button" [disabled]="mascotaEnviando" (click)="cancelarMascota()">Cancelar</button>
+                  <button class="submit-button" type="submit" [disabled]="mascotaEnviando">
+                    @if (mascotaEnviando) { <span class="spinner" aria-hidden="true"></span> Guardando... }
+                    @else { Guardar mascota <span aria-hidden="true">&#8594;</span> }
+                  </button>
+                </div>
+              </footer>
+            </form>
+          } @else {
+            <div class="pet-actions">
+              <button class="submit-button" type="button" (click)="abrirFormularioMascota()">
+                {{ mascotas.length === 0 ? '+ Agregar mascota' : '+ Agregar otra mascota' }}
+              </button>
+              <button class="text-button finish-button" type="button" (click)="finalizarRegistro()">Finalizar registro</button>
+            </div>
+          }
+        }
+      </section>
+    }
+  </main>
+</div>
