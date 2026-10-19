@@ -1,0 +1,208 @@
+<main class="plans-page">
+  <div class="content">
+    <header class="page-heading">
+      <p class="eyebrow"><span aria-hidden="true"></span> ADMINISTRACIÓN <span class="eyebrow-divider">/</span> PLANES</p>
+      <h1>Catálogo de planes</h1>
+      <p class="intro">Consulta las condiciones comerciales vigentes e históricas y administra nuevas versiones.</p>
+    </header>
+
+    @if (exito) {
+      <section class="notice success-notice" role="status">{{ exito }}</section>
+    }
+    @if (error) {
+      <section class="notice error-notice" role="alert">{{ error }}</section>
+    }
+
+    <section class="catalog-section" aria-labelledby="catalog-heading">
+      <div class="section-heading">
+        <span class="section-index">01</span>
+        <div><h2 id="catalog-heading">Planes disponibles</h2><p>El historial comercial de cada plan se conserva.</p></div>
+        <button class="quiet-button refresh-button" type="button" [disabled]="cargando" (click)="cargarPlanes()">
+          {{ cargando ? 'Actualizando…' : 'Actualizar listado' }}
+        </button>
+      </div>
+
+      @if (cargando) {
+        <p class="state-message" role="status">Cargando catálogo…</p>
+      } @else if (planes.length === 0 && !error) {
+        <p class="empty-state">No hay planes en el catálogo.</p>
+      } @else {
+        <div class="plan-grid">
+          @for (plan of planes; track plan.id) {
+            <article class="plan-card" [class.selected]="planSeleccionado?.id === plan.id">
+              <div class="plan-card-heading">
+                <div><h3>{{ plan.nombre }}</h3><p class="plan-code">{{ plan.codigo }}</p></div>
+                <span class="status-badge" [class.inactive]="!plan.activo">{{ plan.activo ? 'Activo' : 'Inactivo' }}</span>
+              </div>
+              @if (plan.versiones.length) {
+                @let version = plan.versiones[plan.versiones.length - 1];
+                <p class="latest-price">{{ formatearPrecio(version.precioMensual) }} <span>/ mes</span></p>
+                <p class="version-date">Última versión registrada desde {{ version.vigenteDesde }}</p>
+                <p class="plan-summary">
+                  Hasta {{ version.maximoMascotas }} {{ version.maximoMascotas === 1 ? 'mascota' : 'mascotas' }}
+                  · {{ version.atencionesIlimitadas ? 'Atenciones ilimitadas' : version.limiteAtenciones + ' atenciones/mes' }}
+                </p>
+              }
+              <button class="quiet-button detail-button" type="button" [disabled]="cargandoDetalle" (click)="consultarDetalle(plan.id)">
+                {{ planSeleccionado?.id === plan.id ? 'Ver detalle actualizado' : 'Ver detalle e historial' }}
+              </button>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="form-section" aria-labelledby="create-plan-heading">
+      <div class="section-heading">
+        <span class="section-index">02</span>
+        <div><h2 id="create-plan-heading">Crear un plan</h2><p>El plan se crea junto con su primera versión comercial.</p></div>
+      </div>
+      <p class="reference-rules">
+        Valores de referencia: Básico — 1 mascota, 2 atenciones, $60.000 COP; Estándar — 2 mascotas, 4 atenciones, $100.000 COP;
+        Premium — 4 mascotas, atenciones ilimitadas, $250.000 COP.
+      </p>
+      <form [formGroup]="crearPlanForm" (ngSubmit)="crearPlan()" novalidate>
+        <div class="fields">
+          <label class="field" for="plan-code">Código
+            <input id="plan-code" formControlName="codigo" maxlength="30" autocomplete="off" />
+            @if (crearPlanForm.controls.codigo.invalid && crearPlanForm.controls.codigo.touched) {
+              <span class="field-error">Usa hasta 30 letras, números, guiones o guiones bajos.</span>
+            }
+          </label>
+          <label class="field" for="plan-name">Nombre
+            <input id="plan-name" formControlName="nombre" maxlength="100" />
+            @if (crearPlanForm.controls.nombre.invalid && crearPlanForm.controls.nombre.touched) {
+              <span class="field-error">El nombre es obligatorio (máximo 100 caracteres).</span>
+            }
+          </label>
+          <label class="field" for="plan-price">Precio mensual (COP)
+            <input id="plan-price" type="number" min="1" step="1" formControlName="precioMensual" />
+            @if (crearPlanForm.controls.precioMensual.invalid && crearPlanForm.controls.precioMensual.touched) {
+              <span class="field-error">Ingresa un precio entero mayor que cero.</span>
+            }
+          </label>
+          <label class="field" for="plan-pets">Máximo de mascotas cubiertas
+            <input id="plan-pets" type="number" min="1" max="2147483647" step="1" formControlName="maximoMascotas" />
+            @if (crearPlanForm.controls.maximoMascotas.invalid && crearPlanForm.controls.maximoMascotas.touched) {
+              <span class="field-error">Ingresa un número entero mayor que cero.</span>
+            }
+          </label>
+          <label class="field" for="plan-attentions">Atenciones mensuales
+            <input id="plan-attentions" type="number" min="1" max="2147483647" step="1" formControlName="limiteAtenciones" placeholder="Vacío = ilimitadas" />
+            <span class="field-hint">Déjalo vacío para representar atenciones ilimitadas (`null`).</span>
+            @if (crearPlanForm.controls.limiteAtenciones.invalid && crearPlanForm.controls.limiteAtenciones.touched) {
+              <span class="field-error">Ingresa un entero positivo o deja el campo vacío.</span>
+            }
+          </label>
+          <label class="field" for="plan-start-date">Vigente desde
+            <input id="plan-start-date" type="date" formControlName="vigenteDesde" />
+            @if (crearPlanForm.controls.vigenteDesde.invalid && crearPlanForm.controls.vigenteDesde.touched) {
+              <span class="field-error">Selecciona la fecha de inicio de vigencia.</span>
+            }
+          </label>
+        </div>
+        <footer class="form-actions">
+          <button class="submit-button" type="submit" [disabled]="creandoPlan">
+            {{ creandoPlan ? 'Creando…' : 'Crear plan y primera versión' }}
+          </button>
+        </footer>
+      </form>
+    </section>
+
+    @if (cargandoDetalle) {
+      <p class="state-message" role="status">Cargando detalle e historial…</p>
+    } @else if (planSeleccionado; as plan) {
+      <section class="detail-section" aria-labelledby="detail-heading">
+        <div class="section-heading detail-heading">
+          <span class="section-index">03</span>
+          <div><h2 id="detail-heading">{{ plan.nombre }} <span class="plan-code">({{ plan.codigo }})</span></h2><p>Detalle e historial de versiones comerciales</p></div>
+          @if (plan.activo) {
+            <button class="danger-button" type="button" [disabled]="desactivandoPlan" (click)="desactivarPlan()">
+              {{ desactivandoPlan ? 'Desactivando…' : 'Desactivar plan' }}
+            </button>
+          }
+        </div>
+
+        @if (plan.versiones.length === 0) {
+          <p class="empty-state">Este plan todavía no tiene versiones comerciales.</p>
+        } @else {
+          <div class="history-list">
+            @for (version of plan.versiones; track version.id) {
+              <article class="version-card">
+                <div class="version-topline"><h3>Versión {{ version.id }}</h3><span class="version-price">{{ formatearPrecio(version.precioMensual) }} / mes</span></div>
+                <dl class="version-conditions">
+                  <div><dt>Máximo de mascotas</dt><dd>{{ version.maximoMascotas }}</dd></div>
+                  <div><dt>Atenciones mensuales</dt><dd>{{ version.atencionesIlimitadas ? 'Ilimitadas' : version.limiteAtenciones }}</dd></div>
+                  <div><dt>Vigente desde</dt><dd>{{ version.vigenteDesde }}</dd></div>
+                  <div><dt>Vigente hasta</dt><dd>{{ version.vigenteHastaExclusiva ? 'Antes de ' + version.vigenteHastaExclusiva : 'Sin fecha de fin programada' }}</dd></div>
+                </dl>
+                <p class="immutable-note">Versión histórica inmutable</p>
+              </article>
+            }
+          </div>
+        }
+
+        <section class="applicable-section" aria-labelledby="applicable-heading">
+          <div class="subsection-heading"><h3 id="applicable-heading">Consultar versión aplicable</h3><p>Se selecciona la versión más reciente cuya fecha de inicio no supera la fecha consultada.</p></div>
+          <div class="date-query">
+            <label class="field" for="query-date">Fecha
+              <input id="query-date" type="date" [formControl]="fechaConsulta" />
+            </label>
+            <button class="quiet-button" type="button" [disabled]="consultandoVersion" (click)="consultarVersionAplicable()">
+              {{ consultandoVersion ? 'Consultando…' : 'Consultar fecha' }}
+            </button>
+          </div>
+          @if (errorConsulta) { <p class="inline-error" role="alert">{{ errorConsulta }}</p> }
+          @if (versionAplicable; as version) {
+            <article class="applicable-result" role="status">
+              <strong>{{ formatearPrecio(version.precioMensual) }} / mes</strong>
+              <span>{{ version.maximoMascotas }} {{ version.maximoMascotas === 1 ? 'mascota' : 'mascotas' }}</span>
+              <span>{{ version.atencionesIlimitadas ? 'Atenciones ilimitadas' : version.limiteAtenciones + ' atenciones mensuales' }}</span>
+              <span>Vigente desde {{ version.vigenteDesde }}</span>
+            </article>
+          }
+        </section>
+
+        @if (plan.activo) {
+          <section class="publish-section" aria-labelledby="publish-heading">
+            <div class="subsection-heading"><h3 id="publish-heading">Publicar nueva versión</h3><p>Las condiciones publicadas son inmutables; publica otra versión para cambiar las condiciones futuras.</p></div>
+            <form [formGroup]="publicarVersionForm" (ngSubmit)="publicarVersion()" novalidate>
+              <div class="fields">
+                <label class="field" for="version-price">Precio mensual (COP)
+                  <input id="version-price" type="number" min="1" step="1" formControlName="precioMensual" />
+                  @if (publicarVersionForm.controls.precioMensual.invalid && publicarVersionForm.controls.precioMensual.touched) {
+                    <span class="field-error">Ingresa un precio entero mayor que cero.</span>
+                  }
+                </label>
+                <label class="field" for="version-pets">Máximo de mascotas cubiertas
+                  <input id="version-pets" type="number" min="1" max="2147483647" step="1" formControlName="maximoMascotas" />
+                  @if (publicarVersionForm.controls.maximoMascotas.invalid && publicarVersionForm.controls.maximoMascotas.touched) {
+                    <span class="field-error">Ingresa un número entero mayor que cero.</span>
+                  }
+                </label>
+                <label class="field" for="version-attentions">Atenciones mensuales
+                  <input id="version-attentions" type="number" min="1" max="2147483647" step="1" formControlName="limiteAtenciones" placeholder="Vacío = ilimitadas" />
+                  <span class="field-hint">Déjalo vacío para representar atenciones ilimitadas (`null`).</span>
+                  @if (publicarVersionForm.controls.limiteAtenciones.invalid && publicarVersionForm.controls.limiteAtenciones.touched) {
+                    <span class="field-error">Ingresa un entero positivo o deja el campo vacío.</span>
+                  }
+                </label>
+                <label class="field" for="version-start-date">Vigente desde
+                  <input id="version-start-date" type="date" formControlName="vigenteDesde" />
+                  @if (publicarVersionForm.controls.vigenteDesde.invalid && publicarVersionForm.controls.vigenteDesde.touched) {
+                    <span class="field-error">Selecciona la fecha de vigencia.</span>
+                  }
+                </label>
+              </div>
+              <footer class="form-actions">
+                <button class="submit-button" type="submit" [disabled]="publicandoVersion">
+                  {{ publicandoVersion ? 'Publicando…' : 'Publicar versión' }}
+                </button>
+              </footer>
+            </form>
+          </section>
+        }
+      </section>
+    }
+  </div>
+</main>
