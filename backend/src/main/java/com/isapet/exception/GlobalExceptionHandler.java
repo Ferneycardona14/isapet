@@ -5,8 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.util.List;
 
@@ -33,6 +35,17 @@ public class GlobalExceptionHandler {
                 List.of("Verifica que la edad sea un número entero y que el cuerpo tenga el formato esperado.")));
     }
 
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class
+    })
+    public ResponseEntity<ErrorResponse> handleInvalidRequestParameter(Exception exception) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "La solicitud contiene parámetros inválidos o incompletos.",
+                List.of()));
+    }
+
     @ExceptionHandler(AfiliadoNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAffiliateNotFound(AfiliadoNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
@@ -49,8 +62,36 @@ public class GlobalExceptionHandler {
                 List.of()));
     }
 
+    @ExceptionHandler(PlanNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePlanNotFound(PlanNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage(),
+                List.of()));
+    }
+
+    @ExceptionHandler(PlanVersionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePlanVersionNotFound(PlanVersionNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage(),
+                List.of()));
+    }
+
     @ExceptionHandler(DuplicateNumeroIdentificacionException.class)
     public ResponseEntity<ErrorResponse> handleDuplicate(DuplicateNumeroIdentificacionException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                exception.getMessage(),
+                List.of()));
+    }
+
+    @ExceptionHandler({
+            PlanCodeAlreadyExistsException.class,
+            PlanInactiveException.class,
+            VersionPlanConflictException.class
+    })
+    public ResponseEntity<ErrorResponse> handlePlanConflict(RuntimeException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 exception.getMessage(),

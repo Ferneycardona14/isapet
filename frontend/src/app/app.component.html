@@ -1,1 +1,26 @@
-<router-outlet />
+<header class="app-header">
+  <a class="brand" routerLink="/afiliados/registro" aria-label="ISAPET, inicio">
+    <span class="brand-mark" aria-hidden="true">I</span>
+    <span>ISAPET</span>
+  </a>
+
+  @if (auth.session$ | async; as session) {
+    <nav class="session-actions" aria-label="Navegación principal">
+      <span class="session-user">{{ session.username }}</span>
+      @if (session.roles.includes('ADMIN')) {
+        <a class="login-link" routerLink="/planes">Administrar planes</a>
+      }
+      <button class="logout-button" type="button" (click)="logout()">Cerrar sesión</button>
+    </nav>
+  } @else {
+    <a class="login-link" routerLink="/login">Iniciar sesión</a>
+  }
+</header>
+
+@if (logoutError) {
+  <p class="logout-error" role="alert">{{ logoutError }}</p>
+}
+
+<main>
+  <router-outlet />
+</main>
