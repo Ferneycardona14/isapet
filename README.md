@@ -80,4 +80,24 @@ Endpoints de administración:
 - `POST /api/v1/afiliados/{id}/mascotas`: agrega mascota al afiliado.
 - `PUT /api/v1/mascotas/{mascotaId}`: actualiza los datos de mascota sin cambiar el afiliado propietario.
 
+## Simulación, plan del afiliado, bonos y prestaciones (F-03 a F-06)
+
+La migración V5 crea el catálogo de servicios veterinarios, los descuentos por plan (`beneficio_plan`), la afiliación (plan y mascotas cubiertas de cada afiliado), los bonos y las prestaciones. Los valores de servicios y descuentos sembrados son de referencia y deben validarse con ISAPET.
+
+- **F-03 Simular plan** (`/simulador`, público): compara los planes activos con condiciones vigentes según la cantidad de mascotas y los servicios esperados al mes. Las atenciones que superan el límite mensual del plan se calculan a valor pleno; se recomienda el plan aplicable de menor costo mensual estimado.
+- **F-04 Consultar plan** (`/afiliados/{id}/plan`): muestra el plan del afiliado, sus mascotas cubiertas, descuentos por servicio y bonos disponibles del mes. Desde aquí también se asigna o cambia el plan (no admite planes inactivos ni más mascotas que el máximo del plan).
+- **F-05 Comprar bono** (`/afiliados/{id}/bonos`): cotiza y registra bonos con el descuento del plan. Exige plan asignado, mascota cubierta y no superar el límite mensual de atenciones (contado por bonos comprados en el mes calendario).
+- **F-06 Historial de prestaciones** (`/afiliados/{id}/prestaciones`): registra atenciones, opcionalmente con un bono disponible de la misma mascota y servicio (que queda como usado), y las consulta filtrando por mascota.
+
+Endpoints:
+
+- `GET /api/v1/simulaciones/servicios` y `POST /api/v1/simulaciones/planes`: públicos y sin CSRF (no usan sesión ni modifican datos).
+- `GET|PUT /api/v1/afiliados/{id}/plan`
+- `GET|POST /api/v1/afiliados/{id}/bonos` y `GET /api/v1/afiliados/{id}/bonos/cotizacion?mascotaId=&servicioId=`
+- `GET|POST /api/v1/afiliados/{id}/prestaciones` (`GET` admite `mascotaId` opcional)
+
+Las reglas de negocio incumplidas responden `422` con el motivo en `message`. Por ahora estas consultas las realiza el rol `ADMIN`; el acceso del propio afiliado depende de F-08.
+
+Para desarrollo local con `ng serve` y su proxy, el backend necesita `FRONTEND_ORIGIN=http://localhost:4200` (el proxy reenvía la cabecera `Origin` y sin esta variable las peticiones `POST`/`PUT` reciben `403 Invalid CORS request`) y `SESSION_COOKIE_SECURE=false`.
+
 Las pruebas backend se ejecutan con `mvn test` desde `backend`; las pruebas frontend con `npm test -- --watch=false --browsers=ChromeHeadless` desde `frontend`.
